@@ -4,10 +4,10 @@ Load the data and display random images from the dataset. Only for dataset explo
 import random
 import cv2
 import matplotlib.pyplot as plt
-from dataloader.dataloader import DataLoader
+from imagesloader.imagesloader import ImagesLoader
 
 if __name__ == '__main__':
-    loader = DataLoader()
+    loader = ImagesLoader()
     loader.get_data('../data/google_api_images')
     df = loader.data
 

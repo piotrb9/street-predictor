@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-class DataLoader:
+class ImagesLoader:
     def __init__(self):
         self.data = None
 
@@ -30,7 +30,7 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    loader = DataLoader()
+    loader = ImagesLoader()
     loader.get_data('../data/google_api_images')
     print(loader.get_classes())
     print(loader.data.sample(10))
