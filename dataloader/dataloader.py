@@ -25,9 +25,13 @@ class DataLoader:
     def get_number_of_classes(self):
         return len(self.get_classes())
 
+    def check_counts(self):
+        return self.data['label'].value_counts()
+
 
 if __name__ == '__main__':
     loader = DataLoader()
     loader.get_data('../data/google_api_images')
     print(loader.get_classes())
     print(loader.data.sample(10))
+    print(loader.check_counts())
