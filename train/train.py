@@ -57,6 +57,11 @@ class CustomDataset(Dataset):
         # Normalize because ToTensorV2() doesn't normalize the image
         image = image / 255
 
+        # Save the image as jpg for debugging purposes
+        image = image.permute(1, 2, 0).numpy()
+        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        cv2.imwrite(f'../data/debug_images/{idx}.jpg', image * 255)
+
         # Convert label to tensor
         label = torch.tensor(label)
 
@@ -237,8 +242,8 @@ if __name__ == '__main__':
 
     # Transform for the training dataset
     image_size = 600
-    transform_soft = A.Compose([A.Resize(image_size, image_size),
-                                A.Rotate(p=0.6, limit=(-30, 30)),
+    transform_soft = A.Compose([A.Rotate(p=0.6, limit=(-30, 30), crop_border=True),
+                                A.Resize(image_size, image_size),
                                 A.HorizontalFlip(p=0.6),
                                 A.CoarseDropout(max_holes=1, max_height=64, max_width=64, p=0.3),
                                 ToTensorV2()])
