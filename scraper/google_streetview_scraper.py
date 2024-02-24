@@ -7,7 +7,7 @@ API_KEY = os.environ.get('GOOGLE_API_KEY')
 
 
 class GoogleStreetViewScraper:
-    def __init__(self, resolution):
+    def __init__(self, resolution='640x640'):
         self.resolution = resolution
 
     def get_images(self, streets, heading_list, save_dir='../data/google_api_images', pitch_min=-10, pitch_max=10):
@@ -40,10 +40,11 @@ class GoogleStreetViewScraper:
 
 
 if __name__ == '__main__':
-    streets = ['Raclawicka', 'Starowislna', 'Slowackiego']
+    streets = ['Raclawicka', 'Starowislna', 'Slowackiego', 'Czarnowiejska', 'Królewska', 'Wrocławska', 'Prądnicka',
+               'Grzegorzecka', 'Biała Droga', 'Rydlowka', 'Miodowa', 'Zwierzyniecka', 'Karmelicka', 'Grodzka']
 
     os.makedirs('../data/google_api_images', exist_ok=True)
 
     heading_list = [0, 90, 180, 270]
-    scraper = GoogleStreetViewScraper('600x600')
+    scraper = GoogleStreetViewScraper('640x640')
     scraper.get_images(streets, heading_list)
