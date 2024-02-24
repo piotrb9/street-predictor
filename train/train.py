@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -15,6 +14,7 @@ import timm
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import random
+from sklearn.model_selection import StratifiedKFold
 
 
 class CustomDataset(Dataset):
@@ -74,6 +74,9 @@ class Trainer:
         self.seed = seed
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {self.device}")
+
+        self.model = self.model.to(self.device)
 
     def train_one_epoch(self):
         # Training mode
@@ -96,8 +99,10 @@ class Trainer:
                 # Forward: Get model outputs
                 y_pred = self.model(X)
 
+                # print(y_pred)
+
                 # Forward: Calculate loss
-                loss = self.criterion(y_pred, y)
+                loss = self.criterion(y_pred, y.long())
 
                 # Covert y and y_pred to lists
                 y = y.detach().cpu().numpy().tolist()
@@ -139,7 +144,7 @@ class Trainer:
                 y_pred = self.model(X)
 
                 # Forward: Calculate loss
-                loss = self.criterion(y_pred, y)
+                loss = self.criterion(y_pred, y.long())
 
                 # Covert y and y_pred to lists
                 y = y.detach().cpu().numpy().tolist()
@@ -184,9 +189,7 @@ class Trainer:
             acc_list.append(acc)
             loss_list.append(loss)
 
-
         return acc_list, loss_list, val_acc_list, val_loss_list, self.model
-
 
     def visualize_history(self, acc, loss, val_acc, val_loss):
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
@@ -232,54 +235,78 @@ if __name__ == '__main__':
     loader.get_data('../data/google_api_images')
     df = loader.data
 
-    train_df, test_df = train_test_split(df, test_size=0.2, random_state=98)
-    train_df, validate_df = train_test_split(train_df, test_size=0.2, random_state=98)
-
-    image_size = 600
-    train_dataset = CustomDataset(train_df, image_size)
-    validate_dataset = CustomDataset(validate_df, image_size)
-
-    batch_size = 128
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-    validate_dataloader = DataLoader(validate_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-
-    # for (image_batch, label_batch) in train_dataloader:
-    #     print(image_batch.shape)
-    #     print(label_batch.shape)
-    #     break
-
-    # Crate the model (use pretrained models made by Ross Wightman)
-
-    n_classes = loader.get_number_of_classes()
-    backbone = 'resnet18'
-
-    learning_rate = 0.0001
-
-    lr_min = 1e-5
-    epochs = 5
-
-    model = timm.create_model(backbone,
-                              pretrained=True,
-                              num_classes=n_classes)
-
-    # Prepare the model for training
-    criterion = nn.CrossEntropyLoss()
-
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=learning_rate,
-        weight_decay=0,
-    )
-
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=np.ceil(len(train_dataloader.dataset) / batch_size) * epochs,
-        eta_min=lr_min
-    )
-
     # Transform for the training dataset
+    image_size = 600
     transform_soft = A.Compose([A.Resize(image_size, image_size),
-                                A.Rotate(p=0.6, limit=(-45, 45)),
+                                A.Rotate(p=0.6, limit=(-30, 30)),
                                 A.HorizontalFlip(p=0.6),
                                 A.CoarseDropout(max_holes=1, max_height=64, max_width=64, p=0.3),
                                 ToTensorV2()])
+
+    n_folds = 5
+
+    # Create a new column for cross-validation folds
+    df["kfold"] = -1
+
+    # Initialize the kfold class
+    skf = StratifiedKFold(n_splits=n_folds)
+
+    # Fill the new column
+    for fold, (train_, val_) in enumerate(skf.split(X=df, y=df.label)):
+        df.loc[val_, "kfold"] = fold
+
+    for fold in range(n_folds):
+        train_df = df[df.kfold != fold].reset_index(drop=True)
+        validate_df = df[df.kfold == fold].reset_index(drop=True)
+
+        # train_df, test_df = train_test_split(df, test_size=0.2, random_state=98)
+        # train_df, validate_df = train_test_split(train_df, test_size=0.2, random_state=98)
+
+        train_dataset = CustomDataset(train_df, image_size, transform=transform_soft)
+        validate_dataset = CustomDataset(validate_df, image_size)
+
+        batch_size = 16
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        validate_dataloader = DataLoader(validate_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+
+        # for (image_batch, label_batch) in train_dataloader:
+        #     print(image_batch.shape)
+        #     print(label_batch.shape)
+        #     break
+
+        # Crate the model (use pretrained models made by Ross Wightman)
+
+        n_classes = loader.get_number_of_classes()
+        print(f'Total classes: {n_classes}')
+        backbone = 'resnet18'
+
+        learning_rate = 0.0001
+
+        lr_min = 1e-5
+        epochs = 5
+
+        model = timm.create_model(backbone,
+                                  pretrained=True,
+                                  num_classes=n_classes)
+
+        # Prepare the model for training
+        criterion = nn.CrossEntropyLoss()
+
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=learning_rate,
+            weight_decay=0,
+        )
+
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=np.ceil(len(train_dataloader.dataset) / batch_size) * epochs,
+            eta_min=lr_min
+        )
+
+        trainer = Trainer(model, criterion, optimizer, scheduler, train_dataloader, validate_dataloader, 98)
+
+        acc, loss, val_acc, val_loss, TEMP_model = trainer.fit(epochs)
+
+        trainer.visualize_history(acc, loss, val_acc, val_loss)
+
