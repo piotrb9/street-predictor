@@ -57,11 +57,6 @@ class CustomDataset(Dataset):
         # Normalize because ToTensorV2() doesn't normalize the image
         image = image / 255
 
-        # Save the image as jpg for debugging purposes
-        image = image.permute(1, 2, 0).numpy()
-        image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-        cv2.imwrite(f'../data/debug_images/{idx}.jpg', image * 255)
-
         # Convert label to tensor
         label = torch.tensor(label)
 
@@ -194,7 +189,7 @@ class Trainer:
             acc_list.append(acc)
             loss_list.append(loss)
 
-        return acc_list, loss_list, val_acc_list, val_loss_list, self.model
+        return acc_list, loss_list, val_acc_list, val_loss_list
 
     def visualize_history(self, acc, loss, val_acc, val_loss):
         fig, ax = plt.subplots(1, 2, figsize=(12, 4))
@@ -211,6 +206,9 @@ class Trainer:
             ax[i].set_xlabel('Epochs')
             ax[i].legend(loc="upper right")
         plt.show()
+
+    def save_model(self, path):
+        torch.save(self.model.state_dict(), path)
 
 
 def set_seed(seed=98):
@@ -274,11 +272,6 @@ if __name__ == '__main__':
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         validate_dataloader = DataLoader(validate_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 
-        # for (image_batch, label_batch) in train_dataloader:
-        #     print(image_batch.shape)
-        #     print(label_batch.shape)
-        #     break
-
         # Crate the model (use pretrained models made by Ross Wightman)
 
         n_classes = loader.get_number_of_classes()
@@ -288,7 +281,7 @@ if __name__ == '__main__':
         learning_rate = 0.0001
 
         lr_min = 1e-5
-        epochs = 5
+        epochs = 15
 
         model = timm.create_model(backbone,
                                   pretrained=True,
@@ -311,7 +304,7 @@ if __name__ == '__main__':
 
         trainer = Trainer(model, criterion, optimizer, scheduler, train_dataloader, validate_dataloader, 98)
 
-        acc, loss, val_acc, val_loss, TEMP_model = trainer.fit(epochs)
+        acc, loss, val_acc, val_loss = trainer.fit(epochs)
 
         trainer.visualize_history(acc, loss, val_acc, val_loss)
 
