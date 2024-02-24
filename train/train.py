@@ -1,6 +1,9 @@
+import os
+
 import numpy as np
 import torch
 import torch.nn as nn
+from matplotlib import pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 import cv2
 import albumentations as A
@@ -11,6 +14,7 @@ from sklearn import preprocessing
 import timm
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
+import random
 
 
 class CustomDataset(Dataset):
@@ -60,13 +64,14 @@ class CustomDataset(Dataset):
 
 
 class Trainer:
-    def __init__(self, model, criterion, optimizer, scheduler, train_dataloader, validate_dataloader):
+    def __init__(self, model, criterion, optimizer, scheduler, train_dataloader, validate_dataloader, seed=98):
         self.model = model
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.train_dataloader = train_dataloader
         self.validate_dataloader = validate_dataloader
+        self.seed = seed
 
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -156,7 +161,69 @@ class Trainer:
         metric = accuracy_score(y, y_pred)
         return metric
 
+    def fit(self, epochs):
+        acc_list = []
+        loss_list = []
+        val_acc_list = []
+        val_loss_list = []
 
+        for epoch in range(epochs):
+            print(f"Epoch {epoch + 1}/{epochs}")
+
+            set_seed(self.seed + epoch)
+
+            acc, loss = self.train_one_epoch()
+
+            if self.validate_dataloader:
+                val_acc, val_loss = self.validate_one_epoch()
+                print(f'Val Loss: {val_loss:.4f} Val Acc: {val_acc:.4f}')
+                val_acc_list.append(val_acc)
+                val_loss_list.append(val_loss)
+
+            print(f'Loss: {loss:.4f} Acc: {acc:.4f}')
+            acc_list.append(acc)
+            loss_list.append(loss)
+
+
+        return acc_list, loss_list, val_acc_list, val_loss_list, self.model
+
+
+    def visualize_history(self, acc, loss, val_acc, val_loss):
+        fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+
+        ax[0].plot(range(len(loss)), loss, color='darkgrey', label='train')
+        ax[0].plot(range(len(val_loss)), val_loss, color='cornflowerblue', label='valid')
+        ax[0].set_title('Loss')
+
+        ax[1].plot(range(len(acc)), acc, color='darkgrey', label='train')
+        ax[1].plot(range(len(val_acc)), val_acc, color='cornflowerblue', label='valid')
+        ax[1].set_title('Metric (Accuracy)')
+
+        for i in range(2):
+            ax[i].set_xlabel('Epochs')
+            ax[i].legend(loc="upper right")
+        plt.show()
+
+
+def set_seed(seed=98):
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+
+    # In general seed PyTorch operations
+    torch.manual_seed(seed)
+
+    # If you are using CUDA on 1 GPU, seed it
+    torch.cuda.manual_seed(seed)
+
+    # If you are using CUDA on more than 1 GPU, seed them all
+    torch.cuda.manual_seed_all(seed)
+
+    # Certain operations in Cudnn are not deterministic, and this line will force them to behave!
+    torch.backends.cudnn.deterministic = True
+
+    # Disable the inbuilt cudnn auto-tuner that finds the best algorithm to use for your hardware.
+    torch.backends.cudnn.benchmark = False
 
 
 if __name__ == '__main__':
@@ -168,8 +235,9 @@ if __name__ == '__main__':
     train_df, test_df = train_test_split(df, test_size=0.2, random_state=98)
     train_df, validate_df = train_test_split(train_df, test_size=0.2, random_state=98)
 
-    train_dataset = CustomDataset(train_df, 600)
-    validate_dataset = CustomDataset(validate_df, 600)
+    image_size = 600
+    train_dataset = CustomDataset(train_df, image_size)
+    validate_dataset = CustomDataset(validate_df, image_size)
 
     batch_size = 128
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
@@ -209,3 +277,9 @@ if __name__ == '__main__':
         eta_min=lr_min
     )
 
+    # Transform for the training dataset
+    transform_soft = A.Compose([A.Resize(image_size, image_size),
+                                A.Rotate(p=0.6, limit=(-45, 45)),
+                                A.HorizontalFlip(p=0.6),
+                                A.CoarseDropout(max_holes=1, max_height=64, max_width=64, p=0.3),
+                                ToTensorV2()])
