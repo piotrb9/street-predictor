@@ -15,52 +15,7 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import random
 from sklearn.model_selection import StratifiedKFold
-
-
-class CustomDataset(Dataset):
-    def __init__(self, df, image_size, transform=None):
-        self.df = df
-        self.files = df['file'].values
-
-        # Do label encoding
-        label_encoder = preprocessing.LabelEncoder()
-        df['encoded_label'] = label_encoder.fit_transform(df['label'])
-
-        self.labels = df['encoded_label'].values
-
-        if transform:
-            self.transform = transform
-        else:
-            self.transform = A.Compose([
-                A.Resize(image_size, image_size),
-                ToTensorV2(),
-            ])
-
-    def __len__(self):
-        return len(self.df)
-
-    def __getitem__(self, idx):
-        # Get file_path and label for index
-        label = self.labels[idx]
-        file_path = self.files[idx]
-
-        # Read an image with OpenCV
-        image = cv2.imread(file_path)
-
-        # Convert the image to RGB color space.
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-        # Apply augmentations
-        augmented = self.transform(image=image)
-        image = augmented['image']
-
-        # Normalize because ToTensorV2() doesn't normalize the image
-        image = image / 255
-
-        # Convert label to tensor
-        label = torch.tensor(label)
-
-        return image, label
+from tools.dataset import CustomDataset
 
 
 class Trainer:
@@ -275,7 +230,7 @@ def check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, 
     print(f"Final mean val loss: {np.mean(final_loss_list)}")
 
 
-def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer):
+def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer, model_path):
     train_dataset = CustomDataset(df.reset_index(drop=True), image_size, transform=transform)
 
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
@@ -292,7 +247,7 @@ def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, cr
 
     trainer.visualize_history(acc, loss, val_acc, val_loss)
 
-    trainer.save_model('../data/models/model.pth')
+    trainer.save_model(model_path)
 
 
 if __name__ == '__main__':
@@ -305,7 +260,7 @@ if __name__ == '__main__':
     batch_size = 16
     learning_rate = 0.0001
     lr_min = 1e-5
-    epochs = 3
+    epochs = 15
     backbone = 'resnet18'
     n_folds = 5
 
@@ -333,4 +288,5 @@ if __name__ == '__main__':
         weight_decay=0,
     )
 
-    train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer)
+    train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer,
+                '../data/models/model.pth')
