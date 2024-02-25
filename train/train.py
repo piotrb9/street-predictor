@@ -229,7 +229,7 @@ def set_seed(seed=98):
     torch.backends.cudnn.benchmark = False
 
 
-def check_model(df, image_size, batch_size, learning_rate, lr_min, epochs, backbone, n_folds, transform):
+def check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, model, criterion, optimizer):
     # Create a new column for cross-validation folds
     df["kfold"] = -1
 
@@ -252,23 +252,6 @@ def check_model(df, image_size, batch_size, learning_rate, lr_min, epochs, backb
 
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
         validate_dataloader = DataLoader(validate_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
-
-        n_classes = loader.get_number_of_classes()
-        print(f'Total classes: {n_classes}')
-
-        # Crate the model (use pretrained models made by Ross Wightman)
-        model = timm.create_model(backbone,
-                                  pretrained=True,
-                                  num_classes=n_classes)
-
-        # Prepare the model for training
-        criterion = nn.CrossEntropyLoss()
-
-        optimizer = torch.optim.Adam(
-            model.parameters(),
-            lr=learning_rate,
-            weight_decay=0,
-        )
 
         scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
@@ -302,7 +285,7 @@ if __name__ == '__main__':
     batch_size = 16
     learning_rate = 0.0001
     lr_min = 1e-5
-    epochs = 2
+    epochs = 15
     backbone = 'resnet18'
     n_folds = 5
 
@@ -313,4 +296,22 @@ if __name__ == '__main__':
                            A.CoarseDropout(max_holes=2, max_height=64, max_width=64, p=0.3),
                            ToTensorV2()])
 
-    check_model(df, image_size, batch_size, learning_rate, lr_min, epochs, backbone, n_folds, transform)
+    n_classes = loader.get_number_of_classes()
+    print(f'Total classes: {n_classes}')
+
+    # Crate the model (use pretrained models made by Ross Wightman)
+    model = timm.create_model(backbone,
+                              pretrained=True,
+                              num_classes=n_classes)
+
+    # Prepare the model for training
+    criterion = nn.CrossEntropyLoss()
+
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=learning_rate,
+        weight_decay=0,
+    )
+
+    # check_model(df, image_size, batch_size, learning_rate, lr_min, epochs, backbone, n_folds, transform)
+    check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, model, criterion, optimizer)
