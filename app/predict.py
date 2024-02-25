@@ -4,7 +4,7 @@ import torch
 import albumentations as A
 from PIL import Image
 import timm
-
+import joblib
 from imagesloader.imagesloader import ImagesLoader
 from albumentations.pytorch import ToTensorV2
 
@@ -59,7 +59,17 @@ if __name__ == "__main__":
     transform = A.Compose([A.Resize(image_size, image_size),
                            ToTensorV2()])
 
-    probabilities = predictor.predict("../data/google_api_images/Grzegorzecka+3_180.jpg", transform)
+    probabilities = predictor.predict("../data/google_api_images/Grodzka+36_90.jpg", transform)
     print(probabilities)
 
-    print(f"Predicted class: {np.argmax(probabilities.cpu().numpy())}")
+    predicted_label_index = np.argmax(probabilities.cpu().numpy())
+    print(f"Predicted class: {predicted_label_index}")
+
+    label_encoder = joblib.load('../data/models/label_encoder.pkl')
+
+    predicted_label = label_encoder.inverse_transform([predicted_label_index])[0]
+    print(f"Predicted class: {predicted_label}")
+
+    # Print probability for every label
+    for i, prob in enumerate(probabilities):
+        print(f"{label_encoder.inverse_transform([i])[0]}: {prob:.4f}")

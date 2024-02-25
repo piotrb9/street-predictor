@@ -1,3 +1,4 @@
+import joblib
 import torch
 from torch.utils.data import Dataset
 import cv2
@@ -12,8 +13,8 @@ class CustomDataset(Dataset):
         self.files = df['file'].values
 
         # Do label encoding
-        label_encoder = preprocessing.LabelEncoder()
-        df['encoded_label'] = label_encoder.fit_transform(df['label'])
+        self.label_encoder = preprocessing.LabelEncoder()
+        df['encoded_label'] = self.label_encoder.fit_transform(df['label'])
 
         self.labels = df['encoded_label'].values
 
@@ -50,4 +51,8 @@ class CustomDataset(Dataset):
         label = torch.tensor(label)
 
         return image, label
+
+    def save_label_encoder(self, path):
+        # Save label encoder
+        joblib.dump(self.label_encoder, path)
 
