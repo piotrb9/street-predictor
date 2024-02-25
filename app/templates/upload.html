@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <form action="/uploader" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" onchange="previewFile()"/><br>
+        <img src="" id="previewImg" alt="Image preview" style="max-width: 300px; max-height: 300px;"><br>
+        <input type="submit"/>
+    </form>
+    <script>
+        function previewFile() {
+            var preview = document.getElementById('previewImg');
+            var file    = document.querySelector('input[type=file]').files[0];
+            var reader  = new FileReader();
+
+            reader.onloadend = function () {
+                preview.src = reader.result;
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = "";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <img src="{{ url_for('static', filename=filename) }}" style="max-width: 300px; max-height: 300px;"><br>
+    {% if results %}
+        <h2>This is {{ results[0][0] }} street with {{ "%.2f"|format(results[0][1] * 100) }}% probability</h2>
+        <h3>Other Predictions:</h3>
+        <ul>
+        {% for name, prob in results %}
+            <li style="color: {% if loop.index == 1 %}green{% else %}black{% endif %};">
+                {{ name }} with probability {{ "%.2f"|format(prob * 100) }}%
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    <button onclick="location.href='/'">Back</button>
+</body>
+</html>
