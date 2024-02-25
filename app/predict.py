@@ -43,6 +43,19 @@ class Predictor:
         return probabilities
 
 
+def decode_predictions(probabilities, label_encoder_path='../data/models/label_encoder.pkl'):
+    label_encoder = joblib.load(label_encoder_path)
+
+    data = []
+    # Print probability for every label
+    for i, prob in enumerate(probabilities):
+        # print(f"{label_encoder.inverse_transform([i])[0]}: {prob:.4f}")
+        data.append((label_encoder.inverse_transform([i])[0], prob.item()))
+
+    return data
+
+
+
 if __name__ == "__main__":
     loader = ImagesLoader()
     loader.get_data('../data/google_api_images')
@@ -60,16 +73,12 @@ if __name__ == "__main__":
                            ToTensorV2()])
 
     probabilities = predictor.predict("../data/google_api_images/Grodzka+36_90.jpg", transform)
-    print(probabilities)
+    # print(probabilities)
 
     predicted_label_index = np.argmax(probabilities.cpu().numpy())
     print(f"Predicted class: {predicted_label_index}")
 
-    label_encoder = joblib.load('../data/models/label_encoder.pkl')
+    decoded_predictions = decode_predictions(probabilities)
 
-    predicted_label = label_encoder.inverse_transform([predicted_label_index])[0]
-    print(f"Predicted class: {predicted_label}")
+    print(decoded_predictions)
 
-    # Print probability for every label
-    for i, prob in enumerate(probabilities):
-        print(f"{label_encoder.inverse_transform([i])[0]}: {prob:.4f}")
