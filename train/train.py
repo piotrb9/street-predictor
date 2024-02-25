@@ -275,6 +275,26 @@ def check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, 
     print(f"Final mean val loss: {np.mean(final_loss_list)}")
 
 
+def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer):
+    train_dataset = CustomDataset(df.reset_index(drop=True), image_size, transform=transform)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=np.ceil(len(train_dataloader.dataset) / batch_size) * epochs,
+        eta_min=lr_min
+    )
+
+    trainer = Trainer(model, criterion, optimizer, scheduler, train_dataloader, None, 98)
+
+    acc, loss, val_acc, val_loss = trainer.fit(epochs)
+
+    trainer.visualize_history(acc, loss, val_acc, val_loss)
+
+    trainer.save_model('../data/models/model.pth')
+
+
 if __name__ == '__main__':
     # Load and prepare the data
     loader = ImagesLoader()
@@ -285,7 +305,7 @@ if __name__ == '__main__':
     batch_size = 16
     learning_rate = 0.0001
     lr_min = 1e-5
-    epochs = 15
+    epochs = 3
     backbone = 'resnet18'
     n_folds = 5
 
@@ -313,5 +333,4 @@ if __name__ == '__main__':
         weight_decay=0,
     )
 
-    # check_model(df, image_size, batch_size, learning_rate, lr_min, epochs, backbone, n_folds, transform)
-    check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, model, criterion, optimizer)
+    train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer)
