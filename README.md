@@ -10,6 +10,13 @@ The dataset has been collected with the Google Street View API (the free tier al
 You need a Google [Streetview API access](https://developers.google.com/maps/documentation/streetview/overview) (free tier).
 **Keep an eye on your API usage limits!**
 
+Modify the config.ini file with your variables
+
+Set env variable with your Google API key
+```bash
+export GOOGLE_API_KEY=YOUR_API_KEY_HERE
+```
+
 The images can be downloaded with the scraper
 ```python3
 python3 scraper/google_streetview_scraper.py
