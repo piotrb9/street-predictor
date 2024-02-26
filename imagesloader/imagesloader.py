@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from config_variables import data_path
 
 
 class ImagesLoader:
@@ -31,7 +32,7 @@ class ImagesLoader:
 
 if __name__ == '__main__':
     loader = ImagesLoader()
-    loader.get_data('../data/google_api_images')
+    loader.get_data(f'../{data_path}')
     print(loader.get_classes())
     print(loader.data.sample(10))
     print(loader.check_counts())

@@ -7,6 +7,7 @@ import timm
 import joblib
 from imagesloader.imagesloader import ImagesLoader
 from albumentations.pytorch import ToTensorV2
+from config_variables import image_size, model_path, label_encoder_path, data_path, backbone
 
 
 class Predictor:
@@ -55,30 +56,22 @@ def decode_predictions(probabilities, label_encoder_path='../data/models/label_e
     return data
 
 
-
-if __name__ == "__main__":
+def get_probabilities(file_path):
     loader = ImagesLoader()
-    loader.get_data('../data/google_api_images')
+    loader.get_data(f'../{data_path}')
     n_classes = loader.get_number_of_classes()
-    image_size = 600
 
-    backbone = 'resnet18'
     model = timm.create_model(backbone,
                               pretrained=True,
                               num_classes=n_classes)
 
-    predictor = Predictor(model, "../data/models/model.pth")
+    predictor = Predictor(model, f"../{model_path}")
 
     transform = A.Compose([A.Resize(image_size, image_size),
                            ToTensorV2()])
 
-    probabilities = predictor.predict("../data/google_api_images/Grodzka+36_90.jpg", transform)
-    # print(probabilities)
+    probabilities = predictor.predict(file_path, transform)
 
-    predicted_label_index = np.argmax(probabilities.cpu().numpy())
-    print(f"Predicted class: {predicted_label_index}")
+    decoded_predictions = decode_predictions(probabilities, f"../{label_encoder_path}")
 
-    decoded_predictions = decode_predictions(probabilities)
-
-    print(decoded_predictions)
-
+    return decoded_predictions

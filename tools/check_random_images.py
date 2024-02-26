@@ -5,10 +5,11 @@ import random
 import cv2
 import matplotlib.pyplot as plt
 from imagesloader.imagesloader import ImagesLoader
+from config_variables import data_path
 
 if __name__ == '__main__':
     loader = ImagesLoader()
-    loader.get_data('../data/google_api_images')
+    loader.get_data(f'../{data_path}')
     df = loader.data
 
     fig, ax = plt.subplots(2, 3, figsize=(10, 6))
@@ -23,9 +24,6 @@ if __name__ == '__main__':
 
             # Convert the image to RGB color space.
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-            # Resize image
-            # image = cv2.resize(image, (256, 256))
 
             ax[i, j].imshow(image)
             ax[i, j].set_title(f"Label: {label}")

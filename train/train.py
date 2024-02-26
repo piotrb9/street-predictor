@@ -3,19 +3,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 from matplotlib import pyplot as plt
-from torch.utils.data import Dataset, DataLoader
-import cv2
+from torch.utils.data import DataLoader
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from sklearn.model_selection import train_test_split
 from imagesloader.imagesloader import ImagesLoader
-from sklearn import preprocessing
 import timm
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import random
 from sklearn.model_selection import StratifiedKFold
 from tools.dataset import CustomDataset
+from config_variables import data_path, image_size, batch_size, learning_rate, lr_min, epochs, backbone, n_folds, \
+    model_path, label_encoder_path
 
 
 class Trainer:
@@ -233,6 +232,9 @@ def check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, 
 def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer, model_path):
     train_dataset = CustomDataset(df.reset_index(drop=True), image_size, transform=transform)
 
+    # Save label encoder
+    train_dataset.save_label_encoder(f'../{label_encoder_path}')
+
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -253,16 +255,8 @@ def train_model(df, image_size, batch_size, lr_min, epochs, transform, model, cr
 if __name__ == '__main__':
     # Load and prepare the data
     loader = ImagesLoader()
-    loader.get_data('../data/google_api_images')
+    loader.get_data(f'../{data_path}')
     df = loader.data
-
-    image_size = 600
-    batch_size = 16
-    learning_rate = 0.0001
-    lr_min = 1e-5
-    epochs = 15
-    backbone = 'resnet18'
-    n_folds = 5
 
     # Transform for the training dataset
     transform = A.Compose([A.Rotate(p=0.6, limit=(-30, 30), crop_border=True),
@@ -288,5 +282,6 @@ if __name__ == '__main__':
         weight_decay=0,
     )
 
+    # check_model(df, image_size, batch_size, lr_min, epochs, n_folds, transform, model, criterion, optimizer)
     train_model(df, image_size, batch_size, lr_min, epochs, transform, model, criterion, optimizer,
-                '../data/models/model.pth')
+                f'../{model_path}')

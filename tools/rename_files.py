@@ -3,10 +3,11 @@ Rename photos with polish characters to remove them
 """
 import os
 import shutil
+from config_variables import data_path
 
 if __name__ == "__main__":
     # Get a list of all jpg files in the data directory
-    data_dir = '../data/google_api_images'
+    data_dir = f'../{data_path}'
     data = []
 
     for root, dirs, files in os.walk(data_dir):
