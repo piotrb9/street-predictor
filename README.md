@@ -36,12 +36,12 @@ python3 app/app.py
 ![image](https://github.com/piotrb9/street-predictor/assets/157641773/0efb4830-11f6-4d84-b78c-40a820fad7fa)
 ![image](https://github.com/piotrb9/street-predictor/assets/157641773/6b4c04af-d946-4e4f-9d67-f132e0946a24)
 
-**LIVE DEMO: http://18.159.250.200/**
+### **LIVE DEMO: http://18.159.250.200/**
 Hosted on AWS EC2.
 
 
 ## Tools
-<img src="https://icon.icepanel.io/Technology/svg/Pandas.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyTorch.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/Python.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyCharm.svg" width="100" height="100">
+<img src="https://icon.icepanel.io/Technology/svg/Pandas.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyTorch.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/Python.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyCharm.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/AWS.svg" width="100" height="100">
 
 ## Contributing
 
