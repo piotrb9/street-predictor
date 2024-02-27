@@ -1,7 +1,14 @@
 import os
+import sys
+
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
+
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from predict import get_probabilities
+
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static'
