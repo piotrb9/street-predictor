@@ -12,13 +12,11 @@ from config_variables import image_size, model_path, label_encoder_path, data_pa
 
 class Predictor:
     def __init__(self, model, model_path):
-        self.model = model
-        self.model.load_state_dict(torch.load(model_path))
-
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Using device: {self.device}")
 
-        self.model = self.model.to(self.device)
+        self.model = model.to(self.device)
+        self.model.load_state_dict(torch.load(model_path, map_location=self.device))
 
     def predict(self, image_path, transform):
         self.model.eval()  # Set the model to evaluation mode
