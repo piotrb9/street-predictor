@@ -19,6 +19,25 @@ def upload_file():
     return render_template('upload.html')
 
 
+@app.route('/feedback', methods=['GET', 'POST'])
+def handle_feedback():
+    feedback = request.form['feedback']
+    filename = request.form['filename']
+    correct_label = request.form['correctLabel']
+    predicted_label = request.form['predictedLabel']
+
+    print(f'Feedback: {feedback}')
+    print(f'Filename: {filename}')
+    print(f'Correct label: {correct_label}')
+    print(f'Predicted label: {predicted_label}')
+
+    if feedback == 'no':
+        text = f'The label was: {correct_label} however the model predicted: {predicted_label}'
+    else:
+        text = f'The model predicted the correct label: {predicted_label}'
+    return render_template('thanks.html', text=text)
+
+
 @app.route('/uploader', methods=['GET', 'POST'])
 def upload_image():
     if request.method == 'POST':
@@ -29,8 +48,6 @@ def upload_image():
 
         sorted_results = get_probabilities(file_path)
         sorted_results = sorted(sorted_results, key=lambda x: x[1], reverse=True)
-
-        sorted_results = sorted_results[:7]
 
         return render_template('results.html', results=sorted_results, filename=filename)
 

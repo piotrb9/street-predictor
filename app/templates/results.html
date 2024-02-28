@@ -6,13 +6,44 @@
         <h2>This is {{ results[0][0] }} street with {{ "%.2f"|format(results[0][1] * 100) }}% probability</h2>
         <h3>Other Predictions:</h3>
         <ul>
-        {% for name, prob in results %}
+        {% for name, prob in results[:7] %}
             <li style="color: {% if loop.index == 1 %}green{% else %}black{% endif %};">
                 {{ name }} with probability {{ "%.2f"|format(prob * 100) }}%
             </li>
         {% endfor %}
         </ul>
     {% endif %}
+
+    <form action="/feedback" method="POST">
+        <input type="hidden" name="filename" value="{{ filename }}">
+        <input type="hidden" name="predictedLabel" value="{{ results[0][0] }}">
+        <p>Is this correct?</p>
+
+        <input type="radio" id="yes" name="feedback" value="yes">
+        <label for="yes">Yes</label><br>
+        <input type="radio" id="no" name="feedback" value="no">
+        <label for="no">No</label><br>
+
+        <div id="labelSelection" style="display:none;">
+            <label for="correctLabel">Select the correct street:</label>
+
+            <select name="correctLabel" id="correctLabel">
+                {% for name, prob in results %}
+                <option value="{{ name }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <input type="submit" value="Submit Feedback">
+    </form>
+
     <button onclick="location.href='/'">Back</button>
+    <script>
+        document.getElementById('no').onclick = function() {
+            document.getElementById('labelSelection').style.display = 'block';
+        };
+        document.getElementById('yes').onclick = function() {
+            document.getElementById('labelSelection').style.display = 'none';
+        };
+    </script>
 </body>
 </html>
