@@ -8,6 +8,7 @@ sys.path.append(parent)
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 from predict import get_probabilities
+from db import create_connection, add_feedback
 
 
 app = Flask(__name__)
@@ -30,6 +31,13 @@ def handle_feedback():
     print(f'Filename: {filename}')
     print(f'Correct label: {correct_label}')
     print(f'Predicted label: {predicted_label}')
+
+    # Save the data to a database
+    conn = create_connection("database.sqlite")
+    if conn is not None:
+        add_feedback(conn, filename, correct_label, predicted_label, feedback)
+    else:
+        print("Error! cannot create the database connection.")
 
     if feedback == 'no':
         text = f'The label was: {correct_label} however the model predicted: {predicted_label}'

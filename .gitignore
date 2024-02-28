@@ -1,3 +1,4 @@
 /.idea
 /data/
 /app/static/*.jpg
+/app/database.sqlite
