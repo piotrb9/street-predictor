@@ -41,8 +41,7 @@ Hosted on AWS EC2.
 
 
 ## Tools
-<img src="https://icon.icepanel.io/Technology/svg/Pandas.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyTorch.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/Python.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyCharm.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/AWS.svg" width="100" height="100">
-
+<img src="https://icon.icepanel.io/Technology/svg/Pandas.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyTorch.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/Python.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/PyCharm.svg" width="100" height="100"><img src="https://icon.icepanel.io/Technology/svg/AWS.svg" width="100" height="100">   <img src="https://cdn.worldvectorlogo.com/logos/flask.svg" width="100" height="100">
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
